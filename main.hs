@@ -1,17 +1,14 @@
 import Prelude
-
-data Color = Color {
-    hue :: Integer,
-    value :: Integer
-} deriving Show
+import Graphics.Image as I
+import qualified HSVtoRGB as HTR
 
 data Coord = Coord {
     x :: Double,
     y :: Double,
-    color :: Color
+    color :: HTR.CustomHSV
 } deriving Show
 
-data Axis = X | Y 
+data Axis = AxisX | AxisY 
 
 sqr :: Double -> Double
 sqr x = x ** 2
@@ -29,19 +26,19 @@ bulbChecking (Coord x y _) =
         else False
 
 coordinates :: [Double] -> [Double] -> [Coord]
-coordinates xs ys = [(Coord x y (Color 0 0)) | x <- xs, y <- ys]
+coordinates xs ys = [(Coord x y (HTR.CustomHSV 0 1 0)) | x <- xs, y <- ys]
 
 distance :: Double -> Double -> Double -> Double
 distance min max n = (abs min + abs max) / n 
 
 parseAxis :: Double -> Axis -> Double 
-parseAxis 0 X = -2.2
-parseAxis n X = n * (distance (-2.2) 0.8 800)
-parseAxis 0 Y = -1.2
-parseAxis n Y = n * (distance (-1.2) 1.2 600)
+parseAxis 0 AxisX = -2.2
+parseAxis n AxisX = n * (distance (-2.2) 0.8 800)
+parseAxis 0 AxisY = -1.2
+parseAxis n AxisY = n * (distance (-1.2) 1.2 600)
 
 pixelToCoord :: Coord -> Coord
-pixelToCoord (Coord x y _) = Coord (parseAxis x X) (parseAxis y Y) (Color 0 0)
+pixelToCoord (Coord x y _) = Coord (parseAxis x AxisX) (parseAxis y AxisY) (HTR.CustomHSV 0 0 0)
 
 escapeTimeX :: Double -> Double -> Double 
 escapeTimeX x y = sqr x - sqr y + x 
@@ -56,20 +53,22 @@ escapeTime :: Double -> Coord -> (Double, Double, Double)
 escapeTime 100 (Coord x y _) = (100, x, y)
 escapeTime i (Coord x y _) = if escapeTimeCheck x y
     then (i, x, y)
-    else escapeTime (i+1) (Coord (escapeTimeX x y) (escapeTimeY x y) (Color 0 0))
+    else escapeTime (i+1) (Coord (escapeTimeX x y) (escapeTimeY x y) (HTR.CustomHSV 0 0 0))
 
 smoothColoringN :: Double -> Double -> Double -> Double 
 smoothColoringN x y i = i + (1 - log (log (sqr x + sqr y) / log 2)) / log 2
 
-smoothColoring :: Double -> Double -> Double -> Color
+smoothColoring :: Double -> Double -> Double -> HTR.CustomHSV
 smoothColoring i x y = if i < 100
-    then Color (round (255 * (smoothColoringN x y i) / 100)) 255
-    else Color (round (255 * i / 100)) 0
+    then HTR.CustomHSV (round (360 * (smoothColoringN x y i) / 100)) 1 1
+    else HTR.CustomHSV (round (360 * i / 100)) 1 0
 
 applyColor :: (Double, Double, Double) -> Coord -> Coord
 applyColor (i, x1, y1) coord = Coord (x coord) (y coord) (smoothColoring i x1 y1)
 
--- debug items
+
+
+-- debug
 xs :: [Double]
 xs = [0..800]
 
@@ -84,8 +83,6 @@ pixel2 = head (tail (coordinates xs ys))
 
 coord1 :: Coord 
 coord1 = pixelToCoord pixel1
--- coord1 = Coord (-0.7469336670838551) (-0.06611018363939891)
 
 coord2 :: Coord 
 coord2 = pixelToCoord pixel2 
--- coord2 = Coord (-0.7469336670838551) (-0.06210350584307189)
