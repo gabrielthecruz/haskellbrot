@@ -1,51 +1,29 @@
 module HSVtoRGB where
-
-import Prelude
 import Data.Fixed
 
-data CustomHSV = CustomHSV {
-    hue :: Int,
-    sat :: Double,
-    val :: Double
+data RGB' = RGB' { 
+    r :: Double, 
+    g :: Double,
+    b :: Double
 } deriving Show 
 
-data RGB = RGB Int Int Int deriving Show
+isBetween :: Double -> Double -> Double -> Bool
+isBetween hue min max = min <= hue && hue < max 
 
-c :: CustomHSV -> Double 
-c (CustomHSV _ s v) = s * v
+ceil :: Double -> Double 
+ceil x = fromIntegral (round x)
 
-x :: CustomHSV -> Double 
-x hsv = (c hsv) * fromIntegral(1 - abs (mod' (div (hue hsv) 60) 2 - 1))
-
-m :: CustomHSV -> Double 
-m hsv = val hsv - c hsv
-
-convertColor :: Double -> CustomHSV -> Double
-convertColor x' hsv = (x' + m hsv) * 255
-
-isBetween :: Int -> Int -> Int -> Bool
-isBetween min max n = min <= n && n < max 
-
-red :: CustomHSV -> Double 
-red (CustomHSV h s v) 
-    | isBetween 0 60 h || isBetween 300 360 h = convertColor (c hsv) hsv
-    | isBetween 60 120 h || isBetween 240 300 h = convertColor (x hsv) hsv
-    | otherwise = convertColor 0 hsv
-    where hsv = CustomHSV h s v
-
-green :: CustomHSV -> Double 
-green (CustomHSV h s v) 
-    | isBetween 0 60 h || isBetween 180 240 h = convertColor (x hsv) hsv
-    | isBetween 60 180 h = convertColor (c hsv) hsv
-    | otherwise = convertColor 0 hsv
-    where hsv = CustomHSV h s v
-
-blue :: CustomHSV -> Double 
-blue (CustomHSV h s v) 
-    | isBetween 120 180 h || isBetween 300 360 h = convertColor (x hsv) hsv
-    | isBetween 180 300 h = convertColor (c hsv) hsv
-    | otherwise = convertColor 0 hsv
-    where hsv = CustomHSV h s v
-
-hsv2rgb :: CustomHSV -> RGB 
-hsv2rgb hsv = RGB (round (red hsv)) (round (green hsv)) (round (blue hsv))
+hsv2rgb :: (Double, Double, Double) -> RGB' -- (Double, Double, Double)
+hsv2rgb (hue, sat, val)
+    | h' == 1   = RGB' (ceil c') (ceil x') (ceil m')
+    | h' == 2   = RGB' (ceil x') (ceil c') (ceil m')
+    | h' == 3   = RGB' (ceil m') (ceil c') (ceil x')
+    | h' == 4   = RGB' (ceil m') (ceil x') (ceil c')
+    | h' == 5   = RGB' (ceil x') (ceil m') (ceil c')
+    | otherwise = RGB' (ceil c') (ceil m') (ceil x')
+    where { 
+        h' = hue / 60;
+        c' = val * 255; 
+        m' = (val - sat * val) * 255;
+        x' = (((sat * val) * (1 - abs (mod' (hue / 60) 2 - 1))) + (val - val * sat)) * 255
+    }
