@@ -13,14 +13,14 @@ isBetween hue min max = min <= hue && hue < max
 ceil :: Double -> Double 
 ceil x = fromIntegral (round x)
 
-hsv2rgb :: (Double, Double, Double) -> RGB' -- (Double, Double, Double)
+hsv2rgb :: (Double, Double, Double) -> RGB' 
 hsv2rgb (hue, sat, val)
-    | h' == 1   = RGB' (ceil c') (ceil x') (ceil m')
-    | h' == 2   = RGB' (ceil x') (ceil c') (ceil m')
-    | h' == 3   = RGB' (ceil m') (ceil c') (ceil x')
-    | h' == 4   = RGB' (ceil m') (ceil x') (ceil c')
-    | h' == 5   = RGB' (ceil x') (ceil m') (ceil c')
-    | otherwise = RGB' (ceil c') (ceil m') (ceil x')
+    | h' <= 1   = RGB' (c') (x') (m')
+    | h' <= 2   = RGB' (x') (c') (m')
+    | h' <= 3   = RGB' (m') (c') (x')
+    | h' <= 4   = RGB' (m') (x') (c')
+    | h' <= 5   = RGB' (x') (m') (c')
+    | otherwise = RGB' (c') (m') (x')
     where { 
         h' = hue / 60;
         c' = val * 255; 
